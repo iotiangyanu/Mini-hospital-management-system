@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .slots-container {
+        max-width: 800px;
+        margin: auto;
+    }
+
+    .page-title {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+
+    .doctor-info {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .doctor-info h5 {
+        color: #0d6efd;
+        margin-bottom: 10px;
+    }
+
+    .date-header {
+        background-color: #0d6efd;
+        color: white;
+        padding: 12px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: 0.3s;
+        user-select: none;
+    }
+
+    .date-header:hover {
+        background-color: #0a58ca;
+    }
+
+    .date-header .toggle-icon {
+        font-size: 18px;
+    }
+
+    .date-content {
+        display: none;
+        margin-bottom: 15px;
+    }
+
+    .date-content.show {
+        display: block;
+    }
+
+    .slot-card {
+        border-radius: 10px;
+        margin-bottom: 10px;
+        transition: 0.3s;
+    }
+
+    .slot-card:hover {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .back-button {
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="slots-container">
+
+    <div class="back-button">
+        <a href="/patient/dashboard/" class="btn btn-secondary btn-sm">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <h3 class="text-center mb-4 page-title">
+        Available Slots
+    </h3>
+
+    {% if doctor %}
+        <div class="doctor-info">
+            <h5>Dr. {{ doctor.full_name }}</h5>
+            <p class="mb-1">
+                <strong>Specialization:</strong> {{ doctor.specialization }}
+            </p>
+            <p class="mb-0">
+                <strong>Qualification:</strong> {{ doctor.qualification }}
+            </p>
+        </div>
+    {% endif %}
+
+    {% if slots_by_date %}
+        {% for date_key, slots_list in slots_by_date.items %}
+            <div class="date-header" onclick="toggleDate(this)" data-date="{{ date_key }}">
+                <span>📅 {{ date_key }}</span>
+                <span class="toggle-icon">▼</span>
+            </div>
+
+            <div class="date-content">
+                {% for slot in slots_list %}
+                    <div class="card shadow-sm slot-card p-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <p class="mb-0">
+                                    <strong>Time:</strong>
+                                    {{ slot.start_time }} - {{ slot.end_time }}
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <a href="{% url 'book_slot' slot.id %}"
+                                   class="btn btn-success btn-sm">
+                                   Book Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info text-center">
+            No available slots for this doctor.
+        </div>
+    {% endif %}
+
+</div>
+
+<script>
+    function toggleDate(element) {
+        const content = element.nextElementSibling;
+        const dateKey = element.getAttribute('data-date');
+        
+        content.classList.toggle('show');
+        
+        const icon = element.querySelector('.toggle-icon');
+        if (content.classList.contains('show')) {
+            icon.textContent = '▲';
+            // Save expanded state to localStorage
+            saveExpandedDate(dateKey);
+        } else {
+            icon.textContent = '▼';
+            // Remove from expanded state in localStorage
+            removeExpandedDate(dateKey);
+        }
+    }
+
+    function saveExpandedDate(dateKey) {
+        let expandedDates = JSON.parse(localStorage.getItem('expandedSlotsDate')) || [];
+        if (!expandedDates.includes(dateKey)) {
+            expandedDates.push(dateKey);
+        }
+        localStorage.setItem('expandedSlotsDate', JSON.stringify(expandedDates));
+    }
+
+    function removeExpandedDate(dateKey) {
+        let expandedDates = JSON.parse(localStorage.getItem('expandedSlotsDate')) || [];
+        expandedDates = expandedDates.filter(date => date !== dateKey);
+        localStorage.setItem('expandedSlotsDate', JSON.stringify(expandedDates));
+    }
+
+    function restoreExpandedDates() {
+        let expandedDates = JSON.parse(localStorage.getItem('expandedSlotsDate')) || [];
+        
+        document.querySelectorAll('.date-header').forEach(header => {
+            const dateKey = header.getAttribute('data-date');
+            if (expandedDates.includes(dateKey)) {
+                const content = header.nextElementSibling;
+                content.classList.add('show');
+                const icon = header.querySelector('.toggle-icon');
+                icon.textContent = '▲';
+            }
+        });
+    }
+
+    // Restore expanded dates on page load
+    document.addEventListener('DOMContentLoaded', restoreExpandedDates);
+</script>
+
+{% endblock %}

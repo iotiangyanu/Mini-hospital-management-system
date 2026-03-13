@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .edit-container {
+        max-width: 500px;
+        margin: auto;
+    }
+
+    .edit-card {
+        border-radius: 12px;
+    }
+
+    .page-title {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+</style>
+
+<div class="edit-container">
+
+    <div class="card shadow-lg p-4 edit-card">
+
+        <h3 class="text-center mb-4 page-title">
+            Edit Slot
+        </h3>
+
+        {% if error %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>⚠️ Warning:</strong> {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Date</label>
+                <input
+                    type="date"
+                    name="date"
+                    class="form-control"
+                    id="dateInput"
+                    value="{{ slot.date }}"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Start Time</label>
+                <input
+                    type="time"
+                    name="start"
+                    class="form-control"
+                    value="{{ slot.start_time }}"
+                    required
+                >
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">End Time</label>
+                <input
+                    type="time"
+                    name="end"
+                    class="form-control"
+                    value="{{ slot.end_time }}"
+                    required
+                >
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    Update Slot
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+    // Set the minimum date to today to prevent selecting past dates
+    const dateInput = document.getElementById('dateInput');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+</script>
+
+{% endblock %}

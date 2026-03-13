@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+
+.login-container{
+    max-width:450px;
+    margin:auto;
+    margin-top:60px;
+}
+
+.login-card{
+    border-radius:12px;
+    padding:30px;
+    background:white;
+}
+
+.login-title{
+    font-weight:bold;
+    color:#0d6efd;
+}
+
+.form-control{
+    border-radius:8px;
+    padding:10px;
+}
+
+.btn-login{
+    border-radius:8px;
+    padding:10px;
+    font-weight:bold;
+}
+
+.register-link{
+    text-decoration:none;
+}
+
+.register-link:hover{
+    text-decoration:underline;
+}
+
+</style>
+
+
+<div class="login-container">
+
+    <div class="card shadow-lg login-card">
+
+        <h3 class="text-center mb-4 login-title">
+            {{ role|title }} Login
+        </h3>
+
+        {% if error %}
+        <div class="alert alert-danger text-center">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Username or Email</label>
+                <input type="text" name="identifier" class="form-control" placeholder="Enter username" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-login">
+                    Login
+                </button>
+            </div>
+
+        </form>
+
+        <hr>
+
+        <div class="text-center">
+
+            {% if role == "doctor" %}
+
+            <p>Don't have an account?</p>
+
+            <a href="/register/doctor/" class="btn btn-outline-primary register-link">
+                Register as Doctor
+            </a>
+
+            {% else %}
+
+            <p>Don't have an account?</p>
+
+            <a href="/register/patient/" class="btn btn-outline-success register-link">
+                Register as Patient
+            </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

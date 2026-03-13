@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+
+.dashboard-title{
+    font-weight:bold;
+    color:#0d6efd;
+}
+
+.section-title{
+    margin-top:30px;
+    margin-bottom:20px;
+    font-weight:bold;
+}
+
+.doctor-card{
+    border-radius:10px;
+}
+
+</style>
+
+
+<div class="container">
+
+    <h2 class="text-center dashboard-title mb-4">
+        Patient Dashboard
+    </h2>
+
+
+    <!-- APPOINTMENTS SECTION -->
+
+    <h4 class="section-title">Your Appointments</h4>
+
+    {% if bookings %}
+
+    <table class="table table-bordered table-striped shadow-sm">
+
+        <thead class="table-dark">
+            <tr>
+                <th>Doctor</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+        {% for booking in bookings %}
+
+        <tr>
+
+            <td>Dr. {{ booking.slot.doctor.full_name }}</td>
+
+            <td>{{ booking.slot.date }}</td>
+
+            <td>{{ booking.slot.start_time }} - {{ booking.slot.end_time }}</td>
+
+            <td>
+                {% if booking.is_canceled_by_doctor %}
+                    <span class="badge bg-danger">Canceled by Doctor</span>
+                {% else %}
+                    <span class="badge bg-success">Confirmed</span>
+                {% endif %}
+            </td>
+
+            <td>
+                {% if not booking.is_canceled_by_doctor %}
+                    <a href="/patient/cancel/{{booking.id}}/" class="btn btn-danger btn-sm">
+                        Cancel
+                    </a>
+                {% else %}
+                    <span class="text-muted">-</span>
+                {% endif %}
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    {% else %}
+
+    <div class="alert alert-info">
+        No appointments booked.
+    </div>
+
+    {% endif %}
+
+
+
+    <!-- DOCTOR LIST SECTION -->
+
+    <h4 class="section-title">Available Doctors</h4>
+
+    <div class="row">
+
+        {% for doctor in doctors %}
+
+        <div class="col-md-4 mb-4">
+
+            <div class="card shadow-sm doctor-card p-3">
+
+                <h5>Dr. {{ doctor.full_name }}</h5>
+
+                <p>
+                <strong>Specialization:</strong> {{ doctor.specialization }}
+                </p>
+
+                <p>
+                <strong>Qualification:</strong> {{ doctor.qualification }}
+                </p>
+
+                <a href="/patient/doctor/{{doctor.id}}/slots/" class="btn btn-primary">
+                    View Slots
+                </a>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

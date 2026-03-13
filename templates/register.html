@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .register-container {
+        max-width: 650px;
+        margin: auto;
+    }
+
+    .register-card {
+        border-radius: 12px;
+    }
+
+    .section-title {
+        font-weight: bold;
+        margin-top: 20px;
+        color: #0d6efd;
+    }
+</style>
+
+<div class="register-container">
+
+    <div class="card shadow-lg p-4 register-card">
+
+        <h3 class="text-center mb-4">
+            {{ role|title }} Registration
+        </h3>
+
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="full_name" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" name="confirm_password" class="form-control" required>
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-select" required>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="dob" class="form-control" required>
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mobile Number</label>
+                <input type="text" name="mobile" class="form-control" required>
+            </div>
+
+
+            {% if role == "doctor" %}
+
+                <h5 class="section-title">Doctor Details</h5>
+
+                <div class="mb-3">
+                    <label class="form-label">Qualification</label>
+                    <input type="text" name="qualification" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Specialization</label>
+                    <input type="text" name="specialization" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Years of Experience</label>
+                    <input type="number" name="experience" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Medical License Number</label>
+                    <input type="text" name="license" class="form-control" required>
+                </div>
+
+            {% endif %}
+
+
+            {% if role == "patient" %}
+
+                <h5 class="section-title">Patient Details</h5>
+
+                <div class="mb-3">
+                    <label class="form-label">Blood Group</label>
+                    <input type="text" name="blood_group" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Explain Your Illness (Optional)</label>
+                    <textarea name="illness" class="form-control"></textarea>
+                </div>
+
+            {% endif %}
+
+
+            <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    Register
+                </button>
+            </div>
+
+        </form>
+
+        <hr>
+
+        <div class="text-center">
+            <a href="{% url 'login' role %}" class="btn btn-outline-secondary">
+                Back to Login
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

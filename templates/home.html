@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+
+.hero-section{
+    background: linear-gradient(135deg,#e3f2fd,#ffffff);
+    padding:70px 30px;
+    border-radius:10px;
+}
+
+.hero-title{
+    font-weight:bold;
+    color:#0d6efd;
+}
+
+.login-btn{
+    padding:12px 30px;
+    font-size:18px;
+    border-radius:8px;
+}
+
+.info-card{
+    border-radius:10px;
+}
+
+</style>
+
+
+<!-- HERO SECTION -->
+<div class="hero-section text-center">
+
+    <h1 class="hero-title mb-3">
+        Mini Hospital Management System
+    </h1>
+
+    <p class="lead mb-4">
+        Manage appointments, doctors, and patient records easily.
+    </p>
+
+    <div class="mt-4">
+
+        <a href="/login/doctor/" class="btn btn-primary login-btn me-3">
+            Login as Doctor
+        </a>
+
+        <a href="/login/patient/" class="btn btn-success login-btn">
+            Login as Patient
+        </a>
+
+    </div>
+
+</div>
+
+
+<br><br>
+
+
+<!-- FEATURES SECTION -->
+
+<div class="row text-center">
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm p-3 info-card">
+
+            <h4>👨‍⚕️ Doctors</h4>
+
+            <p>
+            Doctors can manage their availability slots and view patient bookings.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm p-3 info-card">
+
+            <h4>🧑‍🤝‍🧑 Patients</h4>
+
+            <p>
+            Patients can register, login and book appointments with doctors.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm p-3 info-card">
+
+            <h4>📅 Appointments</h4>
+
+            <p>
+            Easy appointment scheduling and management system.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .dashboard-title {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+
+    .date-header {
+        background-color: #0d6efd;
+        color: white;
+        padding: 12px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: 0.3s;
+        user-select: none;
+    }
+
+    .date-header:hover {
+        background-color: #0a58ca;
+    }
+
+    .date-header .toggle-icon {
+        font-size: 18px;
+    }
+
+    .slots-container {
+        display: none;
+        margin-bottom: 15px;
+    }
+
+    .slots-container.show {
+        display: block;
+    }
+
+    .slot-table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .slot-row {
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="container mt-4">
+
+    <h2 class="dashboard-title mb-4">
+        Doctor Dashboard
+    </h2>
+
+    <div class="mb-3">
+        <a href="/doctor/create-slot/" class="btn btn-primary">
+            Create Availability Slot
+        </a>
+    </div>
+
+    {% if slots_by_date %}
+        {% for date_key, slots_list in slots_by_date.items %}
+            <div class="date-header" onclick="toggleSlots(this)" data-date="{{ date_key }}">
+                <span>📅 {{ date_key }}</span>
+                <span class="toggle-icon">▼</span>
+            </div>
+
+            <div class="slots-container">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped slot-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Patient Name</th>
+                                <th>Gender</th>
+                                <th>Mobile</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slot in slots_list %}
+                                <tr class="slot-row">
+                                    <td>
+                                        {{ slot.start_time }} - {{ slot.end_time }}
+                                    </td>
+
+                                    {% if slot.is_booked %}
+                                        <td class="text-danger">
+                                            <strong>Booked</strong>
+                                        </td>
+
+                                        {% for booking in bookings %}
+                                            {% if booking.slot.id == slot.id %}
+                                                <td>
+                                                    {{ booking.patient.full_name }}
+                                                </td>
+                                                <td>
+                                                    {{ booking.patient.gender }}
+                                                </td>
+                                                <td>
+                                                    {{ booking.patient.mobile_number }}
+                                                </td>
+                                                <td>
+                                                    <a href="/doctor/cancel-booking/{{ booking.id }}/"
+                                                       class="btn btn-warning btn-sm"
+                                                       onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                                       Cancel Appointment
+                                                    </a>
+                                                </td>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                    {% else %}
+                                        <td class="text-success">
+                                            <strong>Available</strong>
+                                        </td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>
+                                            <a href="/doctor/edit-slot/{{ slot.id }}/"
+                                               class="btn btn-warning btn-sm">
+                                               Edit
+                                            </a>
+                                            <a href="/doctor/delete-slot/{{ slot.id }}/"
+                                               class="btn btn-danger btn-sm">
+                                               Delete
+                                            </a>
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            No slots created yet. <a href="/doctor/create-slot/" class="alert-link">Create one now</a>
+        </div>
+    {% endif %}
+
+</div>
+
+<script>
+    function toggleSlots(element) {
+        const container = element.nextElementSibling;
+        const dateKey = element.getAttribute('data-date');
+        
+        container.classList.toggle('show');
+        
+        const icon = element.querySelector('.toggle-icon');
+        if (container.classList.contains('show')) {
+            icon.textContent = '▲';
+            // Save expanded state to localStorage
+            saveExpandedDate(dateKey);
+        } else {
+            icon.textContent = '▼';
+            // Remove from expanded state in localStorage
+            removeExpandedDate(dateKey);
+        }
+    }
+
+    function saveExpandedDate(dateKey) {
+        let expandedDates = JSON.parse(localStorage.getItem('expandedDates')) || [];
+        if (!expandedDates.includes(dateKey)) {
+            expandedDates.push(dateKey);
+        }
+        localStorage.setItem('expandedDates', JSON.stringify(expandedDates));
+    }
+
+    function removeExpandedDate(dateKey) {
+        let expandedDates = JSON.parse(localStorage.getItem('expandedDates')) || [];
+        expandedDates = expandedDates.filter(date => date !== dateKey);
+        localStorage.setItem('expandedDates', JSON.stringify(expandedDates));
+    }
+
+    function restoreExpandedDates() {
+        let expandedDates = JSON.parse(localStorage.getItem('expandedDates')) || [];
+        
+        document.querySelectorAll('.date-header').forEach(header => {
+            const dateKey = header.getAttribute('data-date');
+            if (expandedDates.includes(dateKey)) {
+                const container = header.nextElementSibling;
+                container.classList.add('show');
+                const icon = header.querySelector('.toggle-icon');
+                icon.textContent = '▲';
+            }
+        });
+    }
+
+    // Restore expanded dates on page load
+    document.addEventListener('DOMContentLoaded', restoreExpandedDates);
+</script>
+
+{% endblock %}

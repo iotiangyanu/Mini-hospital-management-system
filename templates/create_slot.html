@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .availability-container {
+        max-width: 500px;
+        margin: auto;
+    }
+
+    .availability-card {
+        border-radius: 12px;
+    }
+
+    .page-title {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+</style>
+
+
+<div class="availability-container">
+
+    <div class="card shadow-lg p-4 availability-card">
+
+        <h3 class="text-center mb-4 page-title">
+            Create Availability
+        </h3>
+
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Date</label>
+                <input type="date" name="date" class="form-control" id="dateInput" required>
+            </div>
+
+
+            <div class="mb-3">
+                <label class="form-label">Start Time</label>
+                <input type="time" name="start" class="form-control" required>
+            </div>
+
+
+            <div class="mb-3">
+                <label class="form-label">End Time</label>
+                <input type="time" name="end" class="form-control" required>
+            </div>
+
+
+            <div class="mb-3">
+                <label class="form-label">Slot Duration</label>
+
+                <select name="duration" class="form-select">
+
+                    <option value="">
+                        Single Slot (Do not divide)
+                    </option>
+
+                    <option value="15">
+                        15 Minutes
+                    </option>
+
+                    <option value="20">
+                        20 Minutes
+                    </option>
+
+                    <option value="30">
+                        30 Minutes
+                    </option>
+
+                    <option value="45">
+                        45 Minutes
+                    </option>
+
+                    <option value="60">
+                        60 Minutes
+                    </option>
+
+                </select>
+            </div>
+
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    Create Slots
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+    // Set the minimum date to today to prevent selecting past dates
+    const dateInput = document.getElementById('dateInput');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+</script>
+
+{% endblock %}
