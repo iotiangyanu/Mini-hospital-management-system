@@ -1,9 +1,12 @@
+from annotated_types import SLOTS
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 # Create your views here.
 from .models import Availability
 from datetime import datetime, timedelta, date
 from booking.models import Booking
+from utils.email_service import send_email
+from account.models import User
 
 @login_required
 def doctor_dashboard(request):
@@ -191,6 +194,30 @@ def edit_slot(request, slot_id):
 
     return render(request, "edit_slot.html", {"slot": slot})
 
+# @login_required
+# def cancel_booking_by_doctor(request, booking_id, slot_id):
+#     # Check if user is doctor
+#     if request.user.role != 'doctor':
+#         return redirect('home')
+
+#     booking = get_object_or_404(Booking, id=booking_id, slot__doctor=request.user)
+    
+#     booking.is_canceled_by_doctor = True
+#     booking.save()
+
+#     # Mark the slot as available
+#     booking.slot.is_booked = False
+#     booking.slot.save()
+
+#     send_email(
+#         request.user.email,
+#         "Appointment Confirmed",
+#         f"Hello {request.user.full_name}, your appointment with Dr. {slot.doctor.full_name} has been confirmed. \n"
+#         f"On {slot.date.strftime('%d %B %Y')} at {slot.start_time.strftime('%I:%M %p')} to {slot.end_time.strftime('%I:%M %p')}"
+#     )
+
+#     return redirect("doctor_dashboard")
+
 @login_required
 def cancel_booking_by_doctor(request, booking_id):
     # Check if user is doctor
@@ -198,12 +225,26 @@ def cancel_booking_by_doctor(request, booking_id):
         return redirect('home')
 
     booking = get_object_or_404(Booking, id=booking_id, slot__doctor=request.user)
-    
+    slot = booking.slot
+
+    # Mark booking cancelled by doctor
     booking.is_canceled_by_doctor = True
     booking.save()
 
-    # Mark the slot as available
-    booking.slot.is_booked = False
-    booking.slot.save()
+    # Make slot available again
+    slot.is_booked = False
+    slot.save()
+
+    # Send email to patient
+    send_email(
+        booking.patient.email,
+        "Appointment Cancelled by Doctor",
+        f"Hello {booking.patient.full_name},\n\n"
+        f"Your appointment with Dr. {slot.doctor.full_name} scheduled on "
+        f"{slot.date.strftime('%d %B %Y')} from "
+        f"{slot.start_time.strftime('%I:%M %p')} to "
+        f"{slot.end_time.strftime('%I:%M %p')} has been cancelled by the doctor.\n\n"
+        f"Please book another slot if required."
+    )
 
     return redirect("doctor_dashboard")
