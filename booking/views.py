@@ -88,19 +88,36 @@ def book_slot(request, slot_id):
 
     except Exception as e:
         print("Calendar error:", e)
+    
+    # # Email to Patient
+    # send_email(
+    #     request.user.email,
+    #     "Appointment Confirmed",
+    #     f"Hello {request.user.full_name}, your appointment with Dr. {slot.doctor.full_name} "
+    #     f"has been confirmed for {slot.date} at {slot.time}."
+    # )
+
+    # # Email to Doctor
+    # send_email(
+    #     slot.doctor.email,
+    #     "New Appointment Booked",
+    #     f"Patient {request.user.full_name} has booked an appointment on {slot.date} at {slot.time}."
+    # )
 
     # Email to Patient
     send_email(
         request.user.email,
         "Appointment Confirmed",
-        f"Hello {request.user.full_name}, your appointment with Dr. {slot.doctor.full_name} has been confirmed."
+        f"Hello {request.user.full_name}, your appointment with Dr. {slot.doctor.full_name} has been confirmed. \n"
+        f"On {slot.date.strftime('%d %B %Y')} at {slot.start_time.strftime('%I:%M %p')} to {slot.end_time.strftime('%I:%M %p')}"
     )
 
     # Email to Doctor
     send_email(
         slot.doctor.email,
         "New Appointment Booked",
-        f"Patient {request.user.full_name} has booked an appointment."
+        f"Patient {request.user.full_name} has booked an appointment.\n"
+        f"On {slot.date.strftime('%d %B %Y')} at {slot.start_time.strftime('%I:%M %p')}  to {slot.end_time.strftime('%I:%M %p')}"
     )
 
     return redirect("/patient/dashboard/")
