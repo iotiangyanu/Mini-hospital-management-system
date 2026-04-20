@@ -1,0 +1,45 @@
+# # "org" ensures this Service is used with the correct Serverless Framework Access Key.
+# org: gyanbhai
+# # "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+# app: hms-emai-service
+# # "service" is the name of this project. This will also be added to your AWS resource names.
+# service: hms
+
+# provider:
+#   name: aws
+#   runtime: python3.12
+#   # Uncomment to easily set up a custom domain. Read the docs for more details:
+#   # https://www.serverless.com/framework/docs/providers/aws/guide/domains
+#   # domain: api.example.com
+
+# functions:
+#   hello:
+#     handler: handler.hello
+#     events:
+#       - httpApi:
+#           path: /
+#           method: get
+
+# plugins:
+#   - serverless-offline
+
+
+service: email-service
+
+provider:
+  name: aws
+  runtime: python3.11
+  environment:
+    SENDER_EMAIL: ${env:SENDER_EMAIL, 'g.dwivedi8924@gmail.com'}
+    SENDER_PASSWORD: ${env:SENDER_PASSWORD, 'Gyanbhai@786'}
+
+functions:
+  sendEmail:
+    handler: handler.send_email
+    events:
+      - http:
+          path: send
+          method: post
+
+plugins:
+  - serverless-offline
