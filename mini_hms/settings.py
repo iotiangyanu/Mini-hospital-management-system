@@ -76,14 +76,10 @@ WSGI_APPLICATION = 'mini_hms.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
- 'default': {
-     'ENGINE': 'django.db.backends.postgresql',
-     'NAME': 'hms_db',
-     'USER': 'postgres',
-     'PASSWORD': 'Gyanbhai@3118',
-     'HOST': 'localhost',
-     'PORT': '5432',
- }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 
@@ -125,3 +121,4 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = 'account.User'
+
