@@ -23,6 +23,8 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('login/<str:role>/', views.user_login, name='login'),
     path('register/<str:role>/', views.register, name='register'),
+    path('verify-otp/<str:role>/<str:email>/', views.verify_otp, name='verify_otp'),
+    path('resend-otp/<str:role>/<str:email>/', views.resend_otp, name='resend_otp'),
     path('doctor/', include('doctors.urls')),
     path('patient/', include('booking.urls')),
     path('logout/', views.logout_view, name='logout'),

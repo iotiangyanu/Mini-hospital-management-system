@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 # Create your views here.
 from .models import Availability
 from datetime import datetime, timedelta, date
-from booking.models import Booking
+from booking.models import Booking, RejectedBooking, CancelledBooking
 from utils.email_service import send_email
 from account.models import User
 
@@ -16,15 +16,17 @@ def doctor_dashboard(request):
 
     slots = Availability.objects.filter(doctor=request.user).order_by('date', 'start_time')
 
-    bookings = Booking.objects.filter(slot__doctor=request.user)
+    # Only show active bookings (not cancelled)
+    bookings = Booking.objects.filter(slot__doctor=request.user).exclude(status='canceled')
 
-    # Group slots by date
+    # Group slots by date - only show available slots (not booked)
     slots_by_date = {}
     for slot in slots:
-        date_key = str(slot.date)
-        if date_key not in slots_by_date:
-            slots_by_date[date_key] = []
-        slots_by_date[date_key].append(slot)
+        if not slot.is_booked:  # Only show available slots
+            date_key = str(slot.date)
+            if date_key not in slots_by_date:
+                slots_by_date[date_key] = []
+            slots_by_date[date_key].append(slot)
 
     context = {
         "slots_by_date": slots_by_date,
@@ -143,15 +145,42 @@ def delete_slot(request, slot_id):
         return redirect('home')
 
     slot = get_object_or_404(Availability, id=slot_id, doctor=request.user)
+
+    # If slot is booked, cancel the booking first
+    if slot.is_booked:
+        booking = Booking.objects.filter(slot=slot).first()
+        if booking:
+            # Send cancellation emails
+            send_email(
+                booking.patient.email,
+                "Appointment Cancelled by Doctor",
+                f"Hello {booking.patient.full_name},\n\n"
+                f"We regret to inform you that your appointment with Dr. {slot.doctor.full_name} "
+                f"scheduled for {slot.date.strftime('%d %B %Y')} at {slot.start_time.strftime('%I:%M %p')} "
+                f"has been cancelled by the doctor due to unavailability.\n\n"
+                f"Please feel free to book another available slot.\n\n"
+                f"We apologize for any inconvenience caused.\n\n"
+                f"Best Regards,\nMini Hospital Management System"
+            )
+
+            send_email(
+                slot.doctor.email,
+                "Slot Cancelled - Appointment Cancelled",
+                f"Dear Dr. {slot.doctor.full_name},\n\n"
+                f"You have cancelled the slot scheduled for {slot.date.strftime('%d %B %Y')} "
+                f"at {slot.start_time.strftime('%I:%M %p')}.\n\n"
+                f"The associated appointment with patient {booking.patient.full_name} "
+                f"has been automatically cancelled.\n\n"
+                f"Best Regards,\nMini Hospital Management System"
+            )
+
+            # Delete the booking
+            booking.delete()
+
+    # Delete the slot from the system
     slot.delete()
+
     return redirect("doctor_dashboard")
-
-    slot = get_object_or_404(Availability, id=slot_id, doctor=request.user)
-
-    if not slot.is_booked:
-        slot.delete()
-
-    return redirect("/doctor/dashboard/")
 
 def edit_slot(request, slot_id):
 
@@ -227,9 +256,113 @@ def cancel_booking_by_doctor(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id, slot__doctor=request.user)
     slot = booking.slot
 
-    # Mark booking cancelled by doctor
-    booking.is_canceled_by_doctor = True
+    # Only allow cancellation if appointment is confirmed
+    if booking.status == 'confirmed':
+        # Store booking details before deletion for email
+        patient_email = booking.patient.email
+        patient_name = booking.patient.full_name
+        doctor_name = booking.slot.doctor.full_name
+        appointment_date = booking.slot.date.strftime('%d %B %Y')
+        appointment_time = booking.slot.start_time.strftime('%I:%M %p')
+
+        # Delete the booking completely to free up the slot
+        booking.delete()
+
+        # Make slot available again
+        slot.is_booked = False
+        slot.save()
+
+        # Send email to patient about cancellation
+        send_email(
+            patient_email,
+            "Appointment Cancelled by Doctor",
+            f"Hello {patient_name},\n\n"
+            f"Your appointment with Dr. {doctor_name} scheduled for "
+            f"{appointment_date} at {appointment_time} "
+            f"has been cancelled by the doctor.\n\n"
+            f"The slot is now available and can be rebooked by you or other patients.\n\n"
+            f"Best Regards,\nMini Hospital Management System"
+        )
+
+        # Send notification email to doctor
+        send_email(
+            slot.doctor.email,
+            "Appointment Cancelled",
+            f"Dear Dr. {doctor_name},\n\n"
+            f"You have successfully cancelled the appointment with patient {patient_name}.\n\n"
+            f"Appointment Details:\n"
+            f"Date: {appointment_date}\n"
+            f"Time: {appointment_time}\n\n"
+            f"The slot is now available for other patients to book.\n\n"
+            f"Best Regards,\nMini Hospital Management System"
+        )
+
+    return redirect("doctor_dashboard")
+
+
+@login_required
+def accept_appointment(request, booking_id):
+    # Check if user is doctor
+    if request.user.role != 'doctor':
+        return redirect('home')
+
+    booking = get_object_or_404(Booking, id=booking_id, slot__doctor=request.user)
+    slot = booking.slot
+
+    # Update booking status
+    booking.status = 'confirmed'
     booking.save()
+
+    # Send email to patient
+    send_email(
+        booking.patient.email,
+        "Appointment Confirmed",
+        f"Hello {booking.patient.full_name},\n\n"
+        f"Great news! Your appointment request with Dr. {slot.doctor.full_name} has been confirmed.\n\n"
+        f"Appointment Details:\n"
+        f"Date: {slot.date.strftime('%d %B %Y')}\n"
+        f"Time: {slot.start_time.strftime('%I:%M %p')} to {slot.end_time.strftime('%I:%M %p')}\n"
+        f"Doctor: Dr. {slot.doctor.full_name}\n"
+        f"Location: Hospital Clinic\n\n"
+        f"Please arrive 15 minutes before your appointment time.\n"
+        f"If you need to reschedule or cancel, please contact us.\n\n"
+        f"Best Regards,\nMini Hospital Management System"
+    )
+
+    # Send confirmation email to doctor
+    send_email(
+        slot.doctor.email,
+        "Appointment Confirmed",
+        f"Dear Dr. {slot.doctor.full_name},\n\n"
+        f"You have confirmed the appointment with patient {booking.patient.full_name}.\n\n"
+        f"Appointment Details:\n"
+        f"Date: {slot.date.strftime('%d %B %Y')}\n"
+        f"Time: {slot.start_time.strftime('%I:%M %p')} to {slot.end_time.strftime('%I:%M %p')}\n"
+        f"Patient: {booking.patient.full_name} ({booking.patient.email})\n\n"
+        f"Best Regards,\nMini Hospital Management System"
+    )
+
+    return redirect("doctor_dashboard")
+
+
+@login_required
+def reject_appointment(request, booking_id):
+    # Check if user is doctor
+    if request.user.role != 'doctor':
+        return redirect('home')
+
+    booking = get_object_or_404(Booking, id=booking_id, slot__doctor=request.user)
+    slot = booking.slot
+
+    # Update booking status
+    booking.status = 'rejected'
+    booking.save()
+
+    # Add patient to rejected bookings for this slot
+    RejectedBooking.objects.get_or_create(
+        patient=booking.patient,
+        slot=slot
+    )
 
     # Make slot available again
     slot.is_booked = False
@@ -238,13 +371,29 @@ def cancel_booking_by_doctor(request, booking_id):
     # Send email to patient
     send_email(
         booking.patient.email,
-        "Appointment Cancelled by Doctor",
+        "Appointment Request Rejected",
         f"Hello {booking.patient.full_name},\n\n"
-        f"Your appointment with Dr. {slot.doctor.full_name} scheduled on "
-        f"{slot.date.strftime('%d %B %Y')} from "
-        f"{slot.start_time.strftime('%I:%M %p')} to "
-        f"{slot.end_time.strftime('%I:%M %p')} has been cancelled by the doctor.\n\n"
-        f"Please book another slot if required."
+        f"We regret to inform you that your appointment request with Dr. {slot.doctor.full_name} "
+        f"for {slot.date.strftime('%d %B %Y')} at {slot.start_time.strftime('%I:%M %p')} "
+        f"has been rejected by the doctor.\n\n"
+        f"This could be due to scheduling conflicts or other reasons. "
+        f"Please feel free to book another available slot.\n\n"
+        f"We apologize for any inconvenience caused.\n\n"
+        f"Best Regards,\nMini Hospital Management System"
+    )
+
+    # Send notification email to doctor
+    send_email(
+        slot.doctor.email,
+        "Appointment Rejected",
+        f"Dear Dr. {slot.doctor.full_name},\n\n"
+        f"You have rejected the appointment request from patient {booking.patient.full_name}.\n\n"
+        f"Appointment Details:\n"
+        f"Date: {slot.date.strftime('%d %B %Y')}\n"
+        f"Time: {slot.start_time.strftime('%I:%M %p')} to {slot.end_time.strftime('%I:%M %p')}\n"
+        f"Patient: {booking.patient.full_name} ({booking.patient.email})\n\n"
+        f"The slot is now available for other patients to book.\n\n"
+        f"Best Regards,\nMini Hospital Management System"
     )
 
     return redirect("doctor_dashboard")

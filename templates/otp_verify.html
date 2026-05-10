@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .otp-container {
+        max-width: 450px;
+        margin: auto;
+        margin-top: 60px;
+    }
+
+    .otp-card {
+        border-radius: 12px;
+        padding: 30px;
+        background: white;
+    }
+
+    .otp-title {
+        font-weight: bold;
+        color: #0d6efd;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .otp-input {
+        text-align: center;
+        font-size: 24px;
+        letter-spacing: 10px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .otp-input:focus {
+        border-color: #0d6efd;
+        outline: none;
+    }
+
+    .timer {
+        text-align: center;
+        color: #dc3545;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .resend-btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="otp-container">
+
+    <div class="card shadow-lg otp-card">
+
+        <h3 class="otp-title">{{ role|title }} Registration - OTP Verification</h3>
+
+        <p class="text-center text-muted mb-4">
+            We've sent a 5-digit OTP to <strong>{{ email }}</strong><br>
+            Enter the OTP below to complete your registration.
+        </p>
+
+        {% if error %}
+        <div class="alert alert-danger text-center">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert alert-success text-center">
+            {{ success }}
+        </div>
+        {% endif %}
+
+        <form method="POST" id="otp-form" action="{% url 'verify_otp' role email %}">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <input type="text" name="otp" class="otp-input" placeholder="00000" maxlength="5" pattern="[0-9]{5}" required>
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    Verify OTP
+                </button>
+            </div>
+
+        </form>
+
+        <div class="timer" id="timer">
+            OTP expires in: <span id="countdown">{{ remaining_seconds|default:0 }}</span> seconds
+        </div>
+
+        <div class="d-grid">
+            <button id="resend-button" type="button" class="btn btn-outline-secondary resend-btn" disabled>
+                Resend OTP
+            </button>
+        </div>
+
+        <hr>
+
+        <div class="text-center">
+            <a href="{% url 'register' role %}" class="btn btn-outline-secondary">
+                Back to Registration
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Countdown timer
+    let countdown = {{ remaining_seconds|default:0 }};
+    const timerElement = document.getElementById('countdown');
+    const otpForm = document.getElementById('otp-form');
+
+    const resendButton = document.getElementById('resend-button');
+    const resendUrl = "{% url 'resend_otp' role email %}";
+
+    function updateResendButton() {
+        if (countdown <= 0) {
+            resendButton.disabled = false;
+            resendButton.textContent = 'Resend OTP';
+        } else {
+            resendButton.disabled = true;
+            resendButton.textContent = `Resend OTP (available in ${countdown}s)`;
+        }
+    }
+
+    function disableOtpForm() {
+        const submitButton = otpForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'OTP Expired';
+    }
+
+    function enableOtpForm() {
+        const submitButton = otpForm.querySelector('button[type="submit"]');
+        submitButton.disabled = false;
+        submitButton.textContent = 'Verify OTP';
+    }
+
+    if (countdown <= 0) {
+        timerElement.textContent = 'Expired';
+        disableOtpForm();
+        updateResendButton();
+    }
+
+    const interval = setInterval(() => {
+        if (countdown <= 0) {
+            clearInterval(interval);
+            timerElement.textContent = 'Expired';
+            disableOtpForm();
+            updateResendButton();
+            return;
+        }
+
+        countdown--;
+        timerElement.textContent = countdown;
+        updateResendButton();
+
+        if (countdown <= 0) {
+            timerElement.textContent = 'Expired';
+            disableOtpForm();
+            updateResendButton();
+        }
+    }, 1000);
+
+    resendButton.addEventListener('click', () => {
+        if (!resendButton.disabled) {
+            window.location.href = resendUrl;
+        }
+    });
+
+    updateResendButton();
+
+    // Auto-focus and input validation
+    const otpInput = document.querySelector('.otp-input');
+    otpInput.focus();
+
+    otpInput.addEventListener('input', function(e) {
+        // Remove non-numeric characters
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+</script>
+
+{% endblock %}

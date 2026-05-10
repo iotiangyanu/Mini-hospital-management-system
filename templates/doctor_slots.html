@@ -97,6 +97,12 @@
         </div>
     {% endif %}
 
+    {% if error %}
+        <div class="alert alert-danger text-center">
+            {{ error }}
+        </div>
+    {% endif %}
+
     {% if slots_by_date %}
         {% for date_key, slots_list in slots_by_date.items %}
             <div class="date-header" onclick="toggleDate(this)" data-date="{{ date_key }}">

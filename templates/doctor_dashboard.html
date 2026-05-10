@@ -62,7 +62,89 @@
         </a>
     </div>
 
-    {% if slots_by_date %}
+    <!-- Appointments Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">📋 Appointment Requests</h4>
+        </div>
+        <div class="card-body">
+            {% if bookings %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Gender</th>
+                                <th>Mobile</th>
+                                <th>Email</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                                <tr>
+                                    <td>{{ booking.patient.full_name }}</td>
+                                    <td>{{ booking.patient.gender }}</td>
+                                    <td>{{ booking.patient.mobile_number }}</td>
+                                    <td>{{ booking.patient.email }}</td>
+                                    <td>{{ booking.slot.date|date:"d M Y" }}</td>
+                                    <td>{{ booking.slot.start_time|time:"H:i" }} - {{ booking.slot.end_time|time:"H:i" }}</td>
+                                    <td>
+                                        {% if booking.status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif booking.status == 'confirmed' %}
+                                            <span class="badge bg-success">Confirmed</span>
+                                        {% elif booking.status == 'rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% elif booking.status == 'canceled' %}
+                                            <span class="badge bg-secondary">Canceled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if booking.status == 'pending' %}
+                                            <a href="{% url 'accept_appointment' booking.id %}"
+                                               class="btn btn-success btn-sm me-2"
+                                               onclick="return confirm('Are you sure you want to accept this appointment?');">
+                                               Accept
+                                            </a>
+                                            <a href="{% url 'reject_appointment' booking.id %}"
+                                               class="btn btn-danger btn-sm"
+                                               onclick="return confirm('Are you sure you want to reject this appointment?');">
+                                               Reject
+                                            </a>
+                                        {% elif booking.status == 'confirmed' %}
+                                            <a href="{% url 'cancel_booking_by_doctor' booking.id %}"
+                                               class="btn btn-warning btn-sm"
+                                               onclick="return confirm('Are you sure you want to cancel this confirmed appointment?');">
+                                               Cancel
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">No actions available</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    No appointment requests yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Available Slots Section -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">📅 Available Slots</h4>
+        </div>
+        <div class="card-body">
+        {% if slots_by_date %}
         {% for date_key, slots_list in slots_by_date.items %}
             <div class="date-header" onclick="toggleSlots(this)" data-date="{{ date_key }}">
                 <span>📅 {{ date_key }}</span>
@@ -93,28 +175,9 @@
                                         <td class="text-danger">
                                             <strong>Booked</strong>
                                         </td>
-
-                                        {% for booking in bookings %}
-                                            {% if booking.slot.id == slot.id %}
-                                                <td>
-                                                    {{ booking.patient.full_name }}
-                                                </td>
-                                                <td>
-                                                    {{ booking.patient.gender }}
-                                                </td>
-                                                <td>
-                                                    {{ booking.patient.mobile_number }}
-                                                </td>
-                                                <td>
-                                                    <a href="/doctor/cancel-booking/{{ booking.id }}/"
-                                                       class="btn btn-warning btn-sm"
-                                                       onclick="return confirm('Are you sure you want to cancel this appointment?');">
-                                                       Cancel Appointment
-                                                    </a>
-                                                </td>
-                                            {% endif %}
-                                        {% endfor %}
-
+                                        <td colspan="4" class="text-center">
+                                            <em>Patient details shown in Appointments section above</em>
+                                        </td>
                                     {% else %}
                                         <td class="text-success">
                                             <strong>Available</strong>
@@ -145,6 +208,8 @@
             No slots created yet. <a href="/doctor/create-slot/" class="alert-link">Create one now</a>
         </div>
     {% endif %}
+        </div>
+    </div>
 
 </div>
 

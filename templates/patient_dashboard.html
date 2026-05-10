@@ -60,18 +60,26 @@
             <td>{{ booking.slot.start_time }} - {{ booking.slot.end_time }}</td>
 
             <td>
-                {% if booking.is_canceled_by_doctor %}
-                    <span class="badge bg-danger">Canceled by Doctor</span>
-                {% else %}
+                {% if booking.status == 'pending' %}
+                    <span class="badge bg-warning">Pending Approval</span>
+                {% elif booking.status == 'confirmed' %}
                     <span class="badge bg-success">Confirmed</span>
+                {% elif booking.status == 'rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
+                {% elif booking.status == 'canceled' %}
+                    <span class="badge bg-secondary">Canceled</span>
                 {% endif %}
             </td>
 
             <td>
-                {% if not booking.is_canceled_by_doctor %}
+                {% if booking.status == 'confirmed' %}
                     <a href="/patient/cancel/{{booking.id}}/" class="btn btn-danger btn-sm">
                         Cancel
                     </a>
+                {% elif booking.status == 'pending' %}
+                    <span class="text-muted">Waiting for approval</span>
+                {% elif booking.status == 'rejected' %}
+                    <span class="text-muted">Rejected - Book another slot</span>
                 {% else %}
                     <span class="text-muted">-</span>
                 {% endif %}
@@ -111,15 +119,20 @@
 
                 <p>
                 <strong>Specialization:</strong> {{ doctor.specialization }}
-                </p>
-
-                <p>
+                <br>
                 <strong>Qualification:</strong> {{ doctor.qualification }}
+                <br>
+                <strong>Contect:</strong> {{ doctor.mobile_number}}
+                <br>
+                <strong>Mail:</strong> {{ doctor.email}}
+                <br>
+                <strong>License number:</strong> {{ doctor.license_number}}
                 </p>
 
                 <a href="/patient/doctor/{{doctor.id}}/slots/" class="btn btn-primary">
                     View Slots
                 </a>
+
 
             </div>
 
