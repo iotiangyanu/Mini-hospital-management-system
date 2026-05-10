@@ -104,8 +104,9 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Years of Experience</label>
-                    <input type="number" name="experience" class="form-control" required>
+                    <label class="form-label">Practicing Year From</label>
+                    <input type="number" name="practicing_year_from" class="form-control" required min="1900" max="2100">
+                    <div class="form-text">Enter the year you started practicing as a doctor.</div>
                 </div>
 
                 <div class="mb-3">
@@ -123,11 +124,6 @@
                 <div class="mb-3">
                     <label class="form-label">Blood Group</label>
                     <input type="text" name="blood_group" class="form-control" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Explain Your Illness (Optional)</label>
-                    <textarea name="illness" class="form-control"></textarea>
                 </div>
 
             {% endif %}

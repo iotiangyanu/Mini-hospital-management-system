@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from doctors.models import Availability
-from .models import Booking, RejectedBooking, CancelledBooking
+from .models import Booking, RejectedBooking
 from account.models import User
-from datetime import date
+from datetime import datetime, date
 from django.contrib.auth.decorators import login_required
 from utils.email_service import send_email
 from utils.google_calendar import create_event
@@ -21,10 +21,12 @@ def patient_dashboard(request):
 
     # Only show active bookings (not cancelled)
     bookings = Booking.objects.filter(patient=request.user).exclude(status='canceled')
+    for doctor in doctors:
+        doctor.year_difference = datetime.now().year - doctor.practicing_year_from
 
     context = {
         "doctors": doctors,
-        "bookings": bookings
+        "bookings": bookings,
     }
 
     return render(request, "patient_dashboard.html", context)
@@ -43,9 +45,6 @@ def doctor_slots(request, doctor_id):
     ).exclude(
         # Exclude slots that this patient has rejected
         id__in=RejectedBooking.objects.filter(patient=request.user).values('slot_id')
-    ).exclude(
-        # Exclude slots that this patient has cancelled
-        id__in=CancelledBooking.objects.filter(patient=request.user).values('slot_id')
     ).order_by('date', 'start_time')
 
     # Group slots by date
@@ -167,12 +166,6 @@ def cancel_booking(request, booking_id):
         patient_email = booking.patient.email
         appointment_date = booking.slot.date.strftime('%d %B %Y')
         appointment_time = booking.slot.start_time.strftime('%I:%M %p')
-
-        # Add patient to cancelled bookings for this slot
-        CancelledBooking.objects.get_or_create(
-            patient=booking.patient,
-            slot=booking.slot
-        )
 
         # Delete the booking completely to free up the slot
         booking.delete()

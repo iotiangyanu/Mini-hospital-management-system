@@ -25,13 +25,29 @@ class User(AbstractUser):
     # Doctor fields
     qualification = models.CharField(max_length=200, blank=True, null=True)
     specialization = models.CharField(max_length=200, blank=True, null=True)
-    experience_years = models.IntegerField(blank=True, null=True)
+    practicing_year_from = models.IntegerField(blank=True, null=True)
     license_number = models.CharField(max_length=200, blank=True, null=True)
 
     # Patient fields
     blood_group = models.CharField(max_length=5, blank=True, null=True)
 
-    illness_description = models.TextField(blank=True, null=True)
+    @property
+    def experience(self):
+        if self.practicing_year_from:
+            current_year = timezone.now().year
+            experience = current_year - self.practicing_year_from
+            return experience if experience >= 0 else 0
+        return None
+
+    @property
+    def age(self):
+        if self.date_of_birth:
+            today = timezone.now().date()
+            age = today.year - self.date_of_birth.year
+            if (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day):
+                age -= 1
+            return age if age >= 0 else 0
+        return None
 
 
 class TemporaryRegistration(models.Model):
@@ -47,7 +63,6 @@ class TemporaryRegistration(models.Model):
     mobile_number = models.CharField(max_length=15)
     qualification = models.CharField(max_length=200, blank=True, null=True)
     specialization = models.CharField(max_length=200, blank=True, null=True)
-    experience_years = models.IntegerField(blank=True, null=True)
+    practicing_year_from = models.IntegerField(blank=True, null=True)
     license_number = models.CharField(max_length=200, blank=True, null=True)
     blood_group = models.CharField(max_length=5, blank=True, null=True)
-    illness_description = models.TextField(blank=True, null=True)

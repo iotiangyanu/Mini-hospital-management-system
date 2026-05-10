@@ -56,6 +56,12 @@
         Doctor Dashboard
     </h2>
 
+    {% if doctor_experience is not None %}
+        <div class="mb-3">
+            <span class="badge bg-secondary">Experience: {{ doctor_experience }} years</span>
+        </div>
+    {% endif %}
+
     <div class="mb-3">
         <a href="/doctor/create-slot/" class="btn btn-primary">
             Create Availability Slot
@@ -74,6 +80,7 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>Patient Name</th>
+                                <th>Age</th>
                                 <th>Gender</th>
                                 <th>Mobile</th>
                                 <th>Email</th>
@@ -87,6 +94,7 @@
                             {% for booking in bookings %}
                                 <tr>
                                     <td>{{ booking.patient.full_name }}</td>
+                                    <td>{{ booking.patient.age }}</td>
                                     <td>{{ booking.patient.gender }}</td>
                                     <td>{{ booking.patient.mobile_number }}</td>
                                     <td>{{ booking.patient.email }}</td>

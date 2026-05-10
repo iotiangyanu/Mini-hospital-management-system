@@ -7,7 +7,7 @@ from utils.email_service import send_email
 import random
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 
 def home(request):
@@ -84,11 +84,10 @@ def register(request, role):
 
         qualification = request.POST.get("qualification")
         specialization = request.POST.get("specialization")
-        experience = request.POST.get("experience")
+        practicing_year_from = request.POST.get("practicing_year_from")
         license_number = request.POST.get("license_number")
 
         blood_group = request.POST.get("blood_group")
-        illness = request.POST.get("illness")
 
         # Validate password confirmation
         if password != confirm_password:
@@ -123,6 +122,38 @@ def register(request, role):
                     "error": "OTP verification pending for this email. Please check your email and verify."
                 })
 
+        # Validate doctor practicing year input
+        if role == 'doctor':
+            try:
+                practicing_year_from = int(practicing_year_from)
+            except (TypeError, ValueError):
+                return render(request, "register.html", {
+                    "role": role,
+                    "error": "Please enter a valid year when you started practicing."
+                })
+            current_year = timezone.now().year
+            if practicing_year_from > current_year or practicing_year_from < 1900:
+                return render(request, "register.html", {
+                    "role": role,
+                    "error": "Please enter a valid practicing year between 1900 and the current year."
+                })
+        else:
+            practicing_year_from = None
+
+        # Validate date of birth
+        try:
+            dob_date = datetime.strptime(dob, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return render(request, "register.html", {
+                "role": role,
+                "error": "Please enter a valid date of birth."
+            })
+        if dob_date > timezone.now().date():
+            return render(request, "register.html", {
+                "role": role,
+                "error": "Date of birth cannot be in the future."
+            })
+
         # Generate 5-digit OTP
         otp = str(random.randint(10000, 99999))
 
@@ -138,14 +169,13 @@ def register(request, role):
             role=role,
             full_name=full_name,
             gender=gender,
-            date_of_birth=dob,
+            date_of_birth=dob_date,
             mobile_number=mobile,
             qualification=qualification,
             specialization=specialization,
-            experience_years=experience,
+            practicing_year_from=practicing_year_from,
             license_number=license_number,
-            blood_group=blood_group,
-            illness_description=illness
+            blood_group=blood_group
         )
 
         # Send OTP email
@@ -234,10 +264,9 @@ def verify_otp(request, role, email):
                 mobile_number=temp_reg.mobile_number,
                 qualification=temp_reg.qualification,
                 specialization=temp_reg.specialization,
-                experience_years=temp_reg.experience_years,
+                practicing_year_from=temp_reg.practicing_year_from,
                 license_number=temp_reg.license_number,
                 blood_group=temp_reg.blood_group,
-                illness_description=temp_reg.illness_description,
                 password=temp_reg.password,
             )
 

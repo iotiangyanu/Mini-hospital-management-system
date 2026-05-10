@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 # Create your views here.
 from .models import Availability
 from datetime import datetime, timedelta, date
-from booking.models import Booking, RejectedBooking, CancelledBooking
+from booking.models import Booking, RejectedBooking
 from utils.email_service import send_email
 from account.models import User
 
@@ -30,7 +30,8 @@ def doctor_dashboard(request):
 
     context = {
         "slots_by_date": slots_by_date,
-        "bookings": bookings
+        "bookings": bookings,
+        "doctor_experience": request.user.experience
     }
 
     return render(request, "doctor_dashboard.html", context)
@@ -354,9 +355,12 @@ def reject_appointment(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id, slot__doctor=request.user)
     slot = booking.slot
 
-    # Update booking status
-    booking.status = 'rejected'
-    booking.save()
+    # Store booking details before deletion for email
+    patient_email = booking.patient.email
+    patient_name = booking.patient.full_name
+    doctor_name = slot.doctor.full_name
+    appointment_date = slot.date.strftime('%d %B %Y')
+    appointment_time = slot.start_time.strftime('%I:%M %p')
 
     # Add patient to rejected bookings for this slot
     RejectedBooking.objects.get_or_create(
@@ -364,17 +368,20 @@ def reject_appointment(request, booking_id):
         slot=slot
     )
 
+    # Delete the booking completely to free up the slot
+    booking.delete()
+
     # Make slot available again
     slot.is_booked = False
     slot.save()
 
     # Send email to patient
     send_email(
-        booking.patient.email,
+        patient_email,
         "Appointment Request Rejected",
-        f"Hello {booking.patient.full_name},\n\n"
-        f"We regret to inform you that your appointment request with Dr. {slot.doctor.full_name} "
-        f"for {slot.date.strftime('%d %B %Y')} at {slot.start_time.strftime('%I:%M %p')} "
+        f"Hello {patient_name},\n\n"
+        f"We regret to inform you that your appointment request with Dr. {doctor_name} "
+        f"for {appointment_date} at {appointment_time} "
         f"has been rejected by the doctor.\n\n"
         f"This could be due to scheduling conflicts or other reasons. "
         f"Please feel free to book another available slot.\n\n"
@@ -386,12 +393,12 @@ def reject_appointment(request, booking_id):
     send_email(
         slot.doctor.email,
         "Appointment Rejected",
-        f"Dear Dr. {slot.doctor.full_name},\n\n"
-        f"You have rejected the appointment request from patient {booking.patient.full_name}.\n\n"
+        f"Dear Dr. {doctor_name},\n\n"
+        f"You have rejected the appointment request from patient {patient_name}.\n\n"
         f"Appointment Details:\n"
-        f"Date: {slot.date.strftime('%d %B %Y')}\n"
-        f"Time: {slot.start_time.strftime('%I:%M %p')} to {slot.end_time.strftime('%I:%M %p')}\n"
-        f"Patient: {booking.patient.full_name} ({booking.patient.email})\n\n"
+        f"Date: {appointment_date}\n"
+        f"Time: {appointment_time}\n"
+        f"Patient: {patient_name} ({patient_email})\n\n"
         f"The slot is now available for other patients to book.\n\n"
         f"Best Regards,\nMini Hospital Management System"
     )

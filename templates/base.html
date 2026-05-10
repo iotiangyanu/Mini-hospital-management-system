@@ -1,14 +1,22 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Mini Hospital Management System</title>
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
 
-    <!-- Custom CSS -->
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
 
         body{
@@ -19,12 +27,13 @@
             padding-top:70px;
         }
 
+        /* NAVBAR */
         .navbar{
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
+            position:fixed;
+            top:0;
+            left:0;
+            right:0;
+            z-index:1000;
         }
 
         .navbar-brand{
@@ -41,7 +50,82 @@
             background:#212529;
             color:white;
             text-align:center;
-            padding:10px;
+            padding:12px;
+        }
+
+        /* NAV LINKS */
+        .navbar-nav .nav-link{
+            color:rgba(255,255,255,0.9) !important;
+            transition:0.3s;
+        }
+
+        .navbar-nav .nav-link:hover{
+            color:white !important;
+        }
+
+        /* DROPDOWN */
+        .dropdown-menu{
+            border:none;
+            border-radius:10px;
+            overflow:hidden;
+            box-shadow:0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .dropdown-item{
+            padding:10px 15px;
+        }
+
+        .dropdown-item:hover{
+            background:#f1f1f1;
+        }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width:991.98px){
+
+            .navbar-collapse{
+                background:#212529;
+                padding:15px;
+                border-radius:10px;
+                margin-top:10px;
+            }
+
+            .navbar-nav{
+                width:100%;
+            }
+
+            .navbar-nav .nav-item{
+                width:100%;
+                margin-bottom:10px;
+            }
+
+            .navbar-nav .btn{
+                width:100%;
+            }
+
+            .mobile-logout-btn{
+                width:100%;
+                text-align:left;
+                padding:10px 15px;
+                border-radius:8px;
+            }
+
+        }
+
+        /* SMALL DEVICES */
+        @media (max-width:575.98px){
+
+            body{
+                padding-top:60px;
+            }
+
+            .navbar-brand{
+                font-size:18px;
+            }
+
+            .main-container{
+                padding:15px;
+            }
+
         }
 
     </style>
@@ -52,55 +136,211 @@
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
-    <div class="container">
 
-        <a class="navbar-brand" href="{% url 'home' %}">
+    <div class="container-fluid">
+
+        <!-- BRAND -->
+        <a class="navbar-brand"
+           href="{% url 'home' %}">
+
             🏥 Mini Hospital
+
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <!-- TOGGLER -->
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+
             <span class="navbar-toggler-icon"></span>
+
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <!-- NAVBAR CONTENT -->
+        <div class="collapse navbar-collapse"
+             id="navbarNav">
 
+            <!-- LEFT NAV -->
             <ul class="navbar-nav me-auto">
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'home' %}">Home</a>
+
+                    <a class="nav-link"
+                       href="{% url 'home' %}">
+
+                        <i class="fas fa-home me-1"></i>
+                        Home
+
+                    </a>
+
                 </li>
+
+                {% if user.is_authenticated %}
+
+                    {% if user.role == 'doctor' %}
+
+                        <li class="nav-item">
+
+                            <a class="nav-link"
+                               href="{% url 'doctor_dashboard' %}">
+
+                                <i class="fas fa-tachometer-alt me-1"></i>
+                                Dashboard
+
+                            </a>
+
+                        </li>
+
+                    {% elif user.role == 'patient' %}
+
+                        <li class="nav-item">
+
+                            <a class="nav-link"
+                               href="{% url 'patient_dashboard' %}">
+
+                                <i class="fas fa-tachometer-alt me-1"></i>
+                                Dashboard
+
+                            </a>
+
+                        </li>
+
+                    {% endif %}
+
+                {% endif %}
+
             </ul>
 
+            <!-- RIGHT NAV -->
+            <ul class="navbar-nav ms-auto align-items-lg-center">
 
-            <!-- User Info & Logout -->
-            {% if user.is_authenticated %}
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-white">
-                    Welcome, <strong>
-                        {% if user.role == 'doctor' %}
-                            Dr. {{ user.full_name }}
-                        {% else %}
-                            {{ user.full_name }}
-                        {% endif %}
-                    </strong>
-                </span>
-                <form action="{% url 'logout' %}" method="POST" style="margin: 0;">
-                    {% csrf_token %}
-                    <button class="btn btn-danger btn-sm">
-                        Logout
-                    </button>
-                </form>
-            </div>
-            {% else %}
-           {% comment %} <a class="btn btn-primary" href="{% url 'login' %}">'''' {% endcomment %}
-                Login
-            </a>
-            {% endif %}
+                {% if user.is_authenticated %}
+
+                    <!-- DESKTOP PROFILE -->
+                    <li class="nav-item dropdown d-none d-lg-block">
+
+                        <a class="nav-link dropdown-toggle d-flex align-items-center"
+                           href="#"
+                           id="userDropdown"
+                           role="button"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">
+
+                            <i class="fas fa-user-circle me-2"></i>
+
+                            {% if user.role == 'doctor' %}
+                                Dr. {{ user.full_name }}
+                            {% else %}
+                                {{ user.full_name }}
+                            {% endif %}
+
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+
+                            <li>
+
+                                <span class="dropdown-item-text text-muted small">
+
+                                    Welcome Back
+
+                                </span>
+
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+
+                                <form action="{% url 'logout' %}"
+                                      method="POST">
+
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            class="dropdown-item text-danger">
+
+                                        <i class="fas fa-sign-out-alt me-2"></i>
+                                        Logout
+
+                                    </button>
+
+                                </form>
+
+                            </li>
+
+                        </ul>
+
+                    </li>
+
+                    <!-- MOBILE LOGOUT BUTTON -->
+                    <li class="nav-item d-lg-none">
+
+                        <form action="{% url 'logout' %}"
+                              method="POST">
+
+                            {% csrf_token %}
+
+                            <button type="submit"
+                                    class="btn btn-danger mobile-logout-btn">
+
+                                <i class="fas fa-sign-out-alt me-2"></i>
+
+                                {% if user.role == 'doctor' %}
+                                    Dr. {{ user.full_name }} | Logout
+                                {% else %}
+                                    {{ user.full_name }} | Logout
+                                {% endif %}
+
+                            </button>
+
+                        </form>
+
+                    </li>
+
+                {% else %}
+
+                    <!-- DOCTOR LOGIN -->
+                    <li class="nav-item me-lg-2">
+
+                        <a class="btn btn-primary"
+                           href="{% url 'login' 'doctor' %}">
+
+                            <i class="fas fa-user-md me-1"></i>
+                            Doctor Login
+
+                        </a>
+
+                    </li>
+
+                    <!-- PATIENT LOGIN -->
+                    <li class="nav-item">
+
+                        <a class="btn btn-success"
+                           href="{% url 'login' 'patient' %}">
+
+                            <i class="fas fa-user me-1"></i>
+                            Patient Login
+
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+            </ul>
 
         </div>
-    </div>
-</nav>
 
+    </div>
+
+</nav>
 
 <!-- MAIN CONTENT -->
 <div class="container main-container">
@@ -111,16 +351,53 @@
 
 </div>
 
-
 <!-- FOOTER -->
 <footer>
-    <p>© 2026 Mini Hospital Management System</p>
+
+    <p class="mb-0">
+
+        © 2026 Mini Hospital Management System
+
+    </p>
+
 </footer>
-
-
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+    // AUTO CLOSE NAVBAR ON MOBILE
+    document.addEventListener('DOMContentLoaded', function(){
+
+        const navLinks =
+            document.querySelectorAll('.nav-link');
+
+        const navbarCollapse =
+            document.getElementById('navbarNav');
+
+        navLinks.forEach(function(link){
+
+            link.addEventListener('click', function(){
+
+                if(window.innerWidth < 992){
+
+                    const bsCollapse =
+                        bootstrap.Collapse.getInstance(navbarCollapse);
+
+                    if(bsCollapse){
+                        bsCollapse.hide();
+                    }
+
+                }
+
+            });
+
+        });
+
+    });
+
+</script>
 
 </body>
 </html>
