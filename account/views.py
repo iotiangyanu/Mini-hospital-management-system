@@ -190,10 +190,11 @@ def register(request, role):
 
 To verify your registration, open the link below:
 Link 1:
-{verify_url}
+{"https://31h5tww4-8000.inc1.devtunnels.ms/verify-otp/"+role+"/"+email+"/"} 
 
 Link 2:
-{"https://31h5tww4-8000.inc1.devtunnels.ms/verify-otp/"+role+"/"+email+"/"} 
+
+{verify_url}
 
 This OTP is valid for {OTP_EXPIRY_SECONDS} seconds.
 
