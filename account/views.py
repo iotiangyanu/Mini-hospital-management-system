@@ -9,6 +9,12 @@ from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from datetime import datetime, timedelta
 
+OTP_EXPIRY_SECONDS = 300
+
+
+def is_otp_expired(temp_reg):
+    return timezone.now() > temp_reg.otp_created_at + timedelta(seconds=OTP_EXPIRY_SECONDS)
+
 
 def home(request):
     return render(request, "home.html")
@@ -113,8 +119,8 @@ def register(request, role):
         # Check if temporary registration exists
         if TemporaryRegistration.objects.filter(email=email).exists():
             temp_reg = TemporaryRegistration.objects.get(email=email)
-            # If OTP is expired, allow new registration
-            if timezone.now() > temp_reg.otp_created_at + timedelta(seconds=180):
+            # If OTP is expired, delete old temporary data and allow new registration
+            if is_otp_expired(temp_reg):
                 temp_reg.delete()
             else:
                 return render(request, "register.html", {
@@ -179,14 +185,18 @@ def register(request, role):
         )
 
         # Send OTP email
+        verify_url = request.build_absolute_uri(reverse('verify_otp', kwargs={'role': role, 'email': email}))
         otp_message = f"""Your OTP for Mini Hospital Management System registration is: {otp}
 
-                        This OTP is valid for 180 seconds.
+To verify your registration, open the link below:
+{verify_url}
 
-                        If you did not request this, please ignore this email.
+This OTP is valid for {OTP_EXPIRY_SECONDS} seconds.
 
-                        Best Regards,
-                        Mini Hospital Management System Team"""
+If you did not request this, please ignore this email.
+
+Best Regards,
+Mini Hospital Management System Team"""
 
         try:
             result = send_email(
@@ -229,19 +239,19 @@ def verify_otp(request, role, email):
         })
 
     otp_age = timezone.now() - temp_reg.otp_created_at
-    remaining_seconds = max(0, 180 - int(otp_age.total_seconds()))
+    remaining_seconds = max(0, OTP_EXPIRY_SECONDS - int(otp_age.total_seconds()))
+
+    if remaining_seconds == 0:
+        temp_reg.delete()
+        return render(request, "otp_verify.html", {
+            "role": role,
+            "email": email,
+            "error": "OTP has expired. Please register again.",
+            "remaining_seconds": remaining_seconds
+        })
 
     if request.method == "POST":
         otp_entered = request.POST.get("otp", "").strip()
-
-        # Check if OTP is expired
-        if remaining_seconds == 0:
-            return render(request, "otp_verify.html", {
-                "role": role,
-                "email": email,
-                "error": "OTP has expired. Please request a new one.",
-                "remaining_seconds": remaining_seconds
-            })
 
         # Strict OTP validation
         if not otp_entered.isdigit() or len(otp_entered) != 5:
@@ -331,10 +341,9 @@ def resend_otp(request, role, email):
             "error": "No pending registration found for this email."
         })
 
-    # Only allow a new OTP after the current one has expired
     otp_age = timezone.now() - temp_reg.otp_created_at
-    if otp_age < timedelta(seconds=180):
-        remaining = int((timedelta(seconds=180) - otp_age).total_seconds())
+    if otp_age < timedelta(seconds=OTP_EXPIRY_SECONDS):
+        remaining = int((timedelta(seconds=OTP_EXPIRY_SECONDS) - otp_age).total_seconds())
         return render(request, "otp_verify.html", {
             "role": role,
             "email": email,
@@ -342,48 +351,12 @@ def resend_otp(request, role, email):
             "remaining_seconds": remaining
         })
 
-    # Generate new OTP after expiry
-    otp = str(random.randint(10000, 99999))
-    temp_reg.otp = otp
-    temp_reg.otp_created_at = timezone.now()
-    temp_reg.save()
-
-    # Send new OTP email
-    otp_message = f"""Your new OTP for Mini Hospital Management System registration is: {otp}
-
-This OTP is valid for 180 seconds.
-
-If you did not request this, please ignore this email.
-
-Best Regards,
-Mini Hospital Management System Team"""
-
-    try:
-        result = send_email(
-            email,
-            "New OTP for HMS Registration",
-            otp_message
-        )
-        if not result:
-            return render(request, "otp_verify.html", {
-                "role": role,
-                "email": email,
-                "error": "Failed to send new OTP email. Please try again.",
-                "remaining_seconds": 180
-            })
-    except Exception as e:
-        return render(request, "otp_verify.html", {
-            "role": role,
-            "email": email,
-            "error": "Error sending new OTP email. Please try again.",
-            "remaining_seconds": 180
-        })
-
+    temp_reg.delete()
     return render(request, "otp_verify.html", {
         "role": role,
         "email": email,
-        "success": "New OTP sent to your email.",
-        "remaining_seconds": 180
+        "error": "OTP has expired. Please register again.",
+        "remaining_seconds": 0
     })
 
 
