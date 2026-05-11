@@ -7,8 +7,6 @@ import subprocess
 
 def main():
     """Run administrative tasks."""
-    # Run serverless bat file automatically
-    subprocess.Popen([".bat"], shell=True)
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mini_hms.settings')
     try:
         from django.core.management import execute_from_command_line

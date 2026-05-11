@@ -85,19 +85,6 @@ This improves communication between users and the system.
 
 ---
 
-### 6. Google Calendar Integration
-
-The system also supports **Google Calendar integration**.
-
-When an appointment is booked:
-
-* An event can be created in Google Calendar
-* Doctors can track appointments easily
-
-This helps manage schedules more effectively.
-
----
-
 # Technologies Used
 
 ### Backend
@@ -118,7 +105,6 @@ This helps manage schedules more effectively.
 
 ### Other Technologies
 
-* Google Calendar API
 * SMTP Email Service
 * Django ORM
 
@@ -136,7 +122,7 @@ mini_hms/
 
 ├── booking/ → Appointment booking system
 
-├── utils/ → Email services and Google Calendar integration
+├── utils/ → Email services and helper utilities
 
 ├── templates/ → HTML templates for UI
 
@@ -234,7 +220,6 @@ http://127.0.0.1:8000/
 3. Patients view available slots and **book appointments**.
 4. Once a slot is booked, it becomes unavailable.
 5. Email notifications are sent to confirm registration and bookings.
-6. Appointments can optionally be synchronized with **Google Calendar**.
 
 ---
 

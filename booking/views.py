@@ -5,7 +5,6 @@ from account.models import User
 from datetime import datetime, date
 from django.contrib.auth.decorators import login_required
 from utils.email_service import send_email
-from utils.google_calendar import create_event
 import logging
 
 logger = logging.getLogger(__name__)
@@ -98,24 +97,6 @@ def book_slot(request, slot_id):
             "error": "This slot is no longer available. Please choose another slot.",
             "doctor": slot.doctor
         })
-
-    # Google Calendar Event
-    try:
-
-        start_time = f"{slot.date}T{slot.start_time}"
-        end_time = f"{slot.date}T{slot.end_time}"
-
-        create_event(
-            doctor_email=slot.doctor.email,
-            patient_email=request.user.email,
-            start_time=start_time,
-            end_time=end_time,
-            doctor_name=slot.doctor.full_name,
-            patient_name=request.user.full_name
-        )
-
-    except Exception as e:
-        print("Calendar error:", e)
 
     # Email to Patient - Appointment Request Submitted
     send_email(
