@@ -26,8 +26,13 @@ SECRET_KEY = 'django-insecure-$kkj1h(dgig74do=n3$4dcvb#2^4k#$6nb))12v(x_kgbnf4vi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["mini-hospital-management-system-production.up.railway.app",
+    "localhost",
+    "127.0.0.1",]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://mini-hospital-management-system-production.up.railway.app",
+]
 
 # Application definition
 
@@ -53,6 +58,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 ROOT_URLCONF = 'mini_hms.urls'
 
