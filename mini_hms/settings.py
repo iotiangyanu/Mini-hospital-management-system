@@ -32,6 +32,8 @@ ALLOWED_HOSTS = ["mini-hospital-management-system-production.up.railway.app",
 
 CSRF_TRUSTED_ORIGINS = [
     "https://mini-hospital-management-system-production.up.railway.app",
+    "https://31h5tww4-8000.inc1.devtunnels.ms/",
+    "http://localhost:8000",
 ]
 
 # Application definition
