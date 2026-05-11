@@ -1,1 +1,0 @@
-web: gunicorn Mini_hospital_management_system.wsgi
