@@ -189,7 +189,11 @@ def register(request, role):
         otp_message = f"""Your OTP for Mini Hospital Management System registration is: {otp}
 
 To verify your registration, open the link below:
-{"https://31h5tww4-8000.inc1.devtunnels.ms/verify-otp/"+role+"/"+email+"/"}
+Link 1:
+{verify_url}
+
+Link 2:
+{"https://31h5tww4-8000.inc1.devtunnels.ms/verify-otp/"+role+"/"+email+"/"} 
 
 This OTP is valid for {OTP_EXPIRY_SECONDS} seconds.
 
